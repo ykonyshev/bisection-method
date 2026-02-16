@@ -1,11 +1,14 @@
 from collections.abc import Callable
 import math
+from typing import Final
 
 type Zero = float
 type AbsoluteError = float
 
 
-def bisection_method(a: float, b: float, f: Callable[[float], float], eps: float) -> Zero | None:
+def bisection_method(
+    a: float, b: float, f: Callable[[float], float], eps: float
+) -> Zero | None:
     """
     Implementation of the bisection bisection method
     after https://en.wikipedia.org/wiki/Bisection_method
@@ -47,22 +50,53 @@ def bisection_method(a: float, b: float, f: Callable[[float], float], eps: float
     return m
 
 
+SAME_SIGNS_MESSAGE: Final[str] = """The provided function and interval don't meet the definition of the Bolzano's theorem,
+the values f(a) and f(b) don't have different signs, therefore, it's not guaranteed
+that there is a zero.
+Please try again.
+"""
+
+
 def main() -> None:
-    a, b = map(lambda v: float(str.strip(v)), input("Input the interval bounds, comma-separated\n>>> ").split(","))
-    func_expr = input("Input an expression that defines the function\n>>> ")
-    eps = float(input("Input the approximation precision\n>>> "))
+    while True:
+        while True:
+            try:
+                a, b = map(
+                    lambda v: float(str.strip(v)),
+                    input("Input the interval bounds, comma-separated\n>>> ").split(","),
+                )
+            except ValueError:
+                print("Could not parse the interval bounds, please try again.")
+                continue
+            except KeyboardInterrupt:
+                return
 
-    def f(x: float) -> float:
-        return eval(func_expr, locals={"x": x})
+            break
 
-    x_0 = bisection_method(a, b, f, eps)
-    if x_0 is not None:
-        x_precision = math.floor(abs(math.log10(eps)))
+        try:
+            func_expr = input("Input an expression that defines the function\n>>> ")
+            eps = float(
+                input("Input the approximation precision as a floating point number\n>>> ")
+            )
+        except KeyboardInterrupt:
+            return
 
-        print(f"x_0 = {x_0:.{x_precision}f}±{eps} = {x_0:.20f}")
-        f_x_0 = f(x_0)
-        f_x_precision = abs(math.floor(math.log10(abs(f_x_0))))
-        print(f"f(x_0) = 0±{abs(f(x_0)):.{f_x_precision}f} = {f_x_0:.20f}")
+        def f(x: float) -> float:
+            return eval(func_expr, locals={"x": x, **math.__dict__})
+
+        x_0 = bisection_method(a, b, f, eps)
+        if x_0 is None:
+            print(SAME_SIGNS_MESSAGE)
+            continue
+
+        break
+
+    x_precision = math.floor(abs(math.log10(eps)))
+
+    print(f"x_0 = {x_0:.{x_precision}f}±{eps} = {x_0:.20f}")
+    f_x_0 = f(x_0)
+    f_x_precision = abs(math.floor(math.log10(abs(f_x_0))))
+    print(f"f(x_0) = 0±{abs(f(x_0)):.{f_x_precision}f} = {f_x_0:.20f}")
 
 
 if __name__ == "__main__":
