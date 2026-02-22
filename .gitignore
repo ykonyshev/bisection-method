@@ -1,3 +1,6 @@
 __pycache__/
+/.ruff_cache/
 /slides/*
+!/slides/images/
+!/slides/Makefile
 !/slides/bisection_method.tex
